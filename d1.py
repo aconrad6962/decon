@@ -30,19 +30,47 @@ nr=2
 nc=2
 fig, ax = plt.subplots(nrows=nr,ncols=nc)
 
-#imJpg = iio.imread("PIA00740.jpg")
+def applyLambert( im ):
+
+  # Create mesh grid
+  x = np.linspace(-1, 1, im.shape[1])
+  y = np.linspace(-1, 1, im.shape[0])
+  X, Y = np.meshgrid(x, y)
+
+  # Calculate radius from the center
+  radius = np.sqrt(X**2 + Y**2)
+
+  # Apply cos(asin(radius)) to each element of the radius
+  result = np.cos(np.arcsin(radius))
+
+  im2 = im[:,:,0]
+  return result * im2
+
 imPng = iio.imread("SHARK_Nov_2023_264W_3.3N_0rot.png")
-print( "png shape", imPng.shape )
+imMos = imPng[:,:,0]           # don't apply lambert to space craft image
+imLam = applyLambert( imPng )
+
+#imJpg = iio.imread("PIA00740.jpg")
+# print( "png shape", imPng.shape )
+# print( "lam shape", imLam.shape )
+# imLam = imPng
 #imoffx = 240
 #imoffy = 300
+
 midp = width/2
-imoffx = int(midp-(imPng.shape[0]/2))
-imoffy = int(midp-(imPng.shape[1]/2))
+imoffx = int(midp-(imLam.shape[0]/2))
+imoffy = int(midp-(imLam.shape[1]/2))
 
 im = np.zeros([width,width])
-im[imoffx:imoffx+imPng.shape[0],
-   imoffy:imoffy+imPng.shape[1]] = \
-     imPng[0:imPng.shape[0],0:imPng.shape[1],0]
+im[imoffx:imoffx+imLam.shape[0],
+   imoffy:imoffy+imLam.shape[1]] = \
+     imLam[0:imLam.shape[0],0:imLam.shape[1]]
+
+
+imMosaic = np.zeros([width,width])
+imMosaic[imoffx:imoffx+imMos.shape[0],
+   imoffy:imoffy+imMos.shape[1]] = \
+     imMos[0:imMos.shape[0],0:imMos.shape[1]]
 
 for i in range(0,nr):
   for j in range(0,nc):
@@ -59,10 +87,12 @@ for i in range(0,nr):
 #   4. Gen the psf using airyDisk2Dkernel
 #   5. Convolve using convolve_fft
 #
+#  For the LIVE and SV dlims of 10,30 rspctvly:  got the 30 by comparing
+#  to November 2023 SV R-band and got the 10 by dividing that by 3
+#
 FoV           = 1000   # milliarsec
-livDlim       = 5      # scaling from 4 for GMT GMagAO-X
-                       # at 0.5 microns from j males talk
-svDlim        = 15
+svDlim        = 27
+livDlim       = svDlim/3     # see above
 fizDlim       = livDlim * 2.2 / 0.5
 
 plateScale = im.shape[0] / FoV   #  chk if square
@@ -111,7 +141,7 @@ ax[1,1].text(0.5,-0.08, "LBTI Fizeau at 2.2 microns", size=12, ha="center",
 
 zim3 = np.zeros([zwid*2,zwid*2])
 # zim3 = im[midp-zwid+yf:midp+zwid-1+yf,midp-zwid+xf:midp+zwid-1+xf]
-zim3 = im[int(midp-zwid+yf):int(midp+zwid-1+yf),
+zim3 = imMosaic[int(midp-zwid+yf):int(midp+zwid-1+yf),
           int(midp-zwid+xf):int(midp+zwid-1+xf)]
 ax[0,1].imshow( zim3, cmap='gray' )
 ax[0,1].text(0.5,-0.08, "Spacecraft image", size=12, ha="center",
