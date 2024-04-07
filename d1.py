@@ -43,6 +43,12 @@ def applyLambert( im ):
   # Apply cos(asin(radius)) to each element of the radius
   result = np.cos(np.arcsin(radius))
 
+  # Get rid of the 'wings' (improve, use meshgrid, later)
+  for i in range( im.shape[0] ):
+    for j in range( im.shape[1] ):
+      if radius[i,j] > 1.0:
+        result[i,j] = 0
+
   im2 = im[:,:,0]
   return result * im2
 
@@ -129,7 +135,8 @@ zim1 = np.zeros([zwid*2,zwid*2])
 zim1 = livRim[int(midp-zwid+yf):int(midp+zwid-1+yf), \
               int(midp-zwid+xf):int(midp+zwid-1+xf)]
 ax[0,0].imshow( zim1, cmap='gray' )
-ax[0,0].text(0.5,-0.08, "LIVE at 0.5 microns", size=12, ha="center",
+livLabel = "Galileo * " + str(livDlim) + " (mas) Airy."
+ax[0,0].text(0.5,-0.08, livLabel, size=12, ha="center",
         transform=ax[0,0].transAxes)
 
 zim2 = np.zeros([zwid*2,zwid*2])
@@ -151,7 +158,8 @@ zim4 = np.zeros([zwid*2,zwid*2])
 zim4 = svRim[int(midp-zwid+yf):int(midp+zwid-1+yf),
               int(midp-zwid+xf):int(midp+zwid-1+xf)]
 ax[1,0].imshow( zim4, cmap='gray' )
-ax[1,0].text(0.5,-0.08, "SHARK-VIS at 0.5 microns", size=12, ha="center",
+svLabel = "Galileo * " + str(svDlim) + " (mas) Airy."
+ax[1,0].text(0.5,-0.08, svLabel, size=12, ha="center",
         transform=ax[1,0].transAxes)
 
 #
